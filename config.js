@@ -1,8 +1,8 @@
 // config.js (no-modules version)
 // Paste your Supabase keys here
 window.CONFIG = {
-  SUPABASE_URL: "PASTE_SUPABASE_URL_HERE",
-  SUPABASE_ANON_KEY: "PASTE_SUPABASE_ANON_KEY_HERE",
+  SUPABASE_URL: "https://phclbufylvlnfqoqtfcn.supabase.co/",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBoY2xidWZ5bHZsbmZxb3F0ZmNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1MTI2NzAsImV4cCI6MjA4MzA4ODY3MH0.Rl2C23AECjTctuax-w6kx6oi4g4nQ3ZR4_qRoTGiNhU",
 
   SESSION_CAPACITY: 20,
 
