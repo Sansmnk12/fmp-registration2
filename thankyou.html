@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Thank You — Registration Submitted</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="shell">
+      <div class="hero">
+        <div class="kicker">FMP — FUTURE MINERALS PIONEERS</div>
+        <h1>Registration submitted ✅</h1>
+        <p class="sub">We saved your spot. See you at the workshop.</p>
+      </div>
+
+      <div class="card">
+        <div class="logo">
+          <img src="./assets/logo.png" alt="Logo" />
+        </div>
+        <div class="card-inner">
+          <div class="avail">
+            <div>
+              <h3>Your session</h3>
+              <p class="big" id="sessionText" style="font-size:20px; font-weight:800; margin:0;">—</p>
+              <p class="small" id="personText">—</p>
+            </div>
+            <div class="badge good">CONFIRMED</div>
+          </div>
+
+          <div class="sep"></div>
+          <button class="btn secondary" onclick="location.href='./index.html'">Back to form</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    const params = new URLSearchParams(location.search);
+    const session = params.get("session") || "—";
+    const name = params.get("name") || "";
+    const email = params.get("email") || "";
+    document.getElementById("sessionText").textContent = session;
+    document.getElementById("personText").textContent = [name, email].filter(Boolean).join(" • ") || "—";
+  </script>
+</body>
+</html>
