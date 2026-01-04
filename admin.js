@@ -1,139 +1,105 @@
-// admin.js (no-modules version)
-(function(){
-  const { qs, setMsg } = window.Utils;
-  const C = window.CONFIG;
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin — Registrations</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="shell">
+      <div class="hero">
+        <div class="kicker">FMP — FUTURE MINERALS PIONEERS</div>
+        <h1>Admin Panel</h1>
+        <p class="sub">Login → view registrations → export Excel. (Only approved admins can see this.)</p>
+      </div>
 
-  const supabaseReady =
-    !!C.SUPABASE_URL && !!C.SUPABASE_ANON_KEY &&
-    !C.SUPABASE_URL.includes("PASTE_SUPABASE_URL_HERE") &&
-    !C.SUPABASE_ANON_KEY.includes("PASTE_SUPABASE_ANON_KEY_HERE") &&
-    window.supabase && typeof window.supabase.createClient === "function";
+      <div class="card">
+        <div class="logo">
+          <img src="./assets/logo.png" alt="Logo" />
+        </div>
 
-  const client = supabaseReady ? window.supabase.createClient(C.SUPABASE_URL, C.SUPABASE_ANON_KEY) : null;
+        <div class="card-inner">
+          <div class="toolbar">
+            <div class="chip" id="adminStatus">Not signed in</div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="btn secondary" id="refreshBtn" type="button">Refresh</button>
+              <button class="btn secondary" id="exportBtn" style="display:none;">Export Excel</button>
+              <button class="btn secondary" id="logoutBtn" type="button" style="display:none;">Logout</button>
+            </div>
+          </div>
 
-  const els = {
-    authMsg: qs("#authMsg"),
-    dashMsg: qs("#dashMsg"),
-    email: qs("#adminEmail"),
-    pass: qs("#adminPass"),
-    loginBtn: qs("#loginBtn"),
-    registerBtn: qs("#registerBtn"),
-    logoutBtn: qs("#logoutBtn"),
-    exportBtn: qs("#exportBtn"),
-    tableBody: qs("#regTableBody"),
-    dashWrap: qs("#dashWrap"),
-    authWrap: qs("#authWrap"),
-    me: qs("#me"),
-  };
+          <div class="sep"></div>
 
-  function showAuth(){ els.authWrap.style.display="block"; els.dashWrap.style.display="none"; }
-  function showDash(){ els.authWrap.style.display="none"; els.dashWrap.style.display="block"; }
-  function hideExport(){ els.exportBtn.style.display="none"; els.exportBtn.disabled=true; }
-  function showExport(){ els.exportBtn.style.display="inline-block"; els.exportBtn.disabled=false; }
+          <div id="authBox">
+            <div class="grid two">
+              <div class="field">
+                <label>Email <span class="ar">البريد</span></label>
+                <input class="input" id="adminEmail" type="email" placeholder="admin@email.com" />
+              </div>
+              <div class="field">
+                <label>Password <span class="ar">كلمة المرور</span></label>
+                <input class="input" id="adminPassword" type="password" placeholder="••••••••" />
+              </div>
+            </div>
+            <div style="height:10px"></div>
+            <div class="grid two">
+              <button class="btn" id="loginBtn" type="button">Login</button>
+              <button class="btn secondary" id="signupBtn" type="button">Admin Register</button>
+            </div>
+            <div class="hint">Register creates an account. An existing approved admin must set approved=true in the admins table.</div>
+            <div id="authMsg" style="display:none;"></div>
+          </div>
 
-  hideExport();
+          <div id="dataBox" style="display:none;">
+            <div class="hint" id="countHint">—</div>
+            <div style="height:10px"></div>
 
-  async function isApproved(email){
-    const { data, error } = await client.from("admins").select("approved").eq("email", email).maybeSingle();
-    if(error) throw error;
-    return !!(data && data.approved);
-  }
+            <div style="overflow:auto;">
+              <table class="table" id="regTable">
+                <thead>
+                  <tr>
+                    <th>Created</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Team</th>
+                    <th>Track</th>
+                    <th>Workshop</th>
+                    <th>Day</th>
+                    <th>Time</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
 
-  async function loadTable(){
-    const { data, error } = await client
-      .from("registrations_view")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if(error) throw error;
+            <div class="sep"></div>
 
-    els.tableBody.innerHTML = "";
-    for(const r of (data||[])){
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${r.created_at ? new Date(r.created_at).toLocaleString() : ""}</td>
-        <td>${r.full_name||""}</td>
-        <td>${r.email||""}</td>
-        <td>${r.phone||""}</td>
-        <td>${r.team_name||""}</td>
-        <td>${r.track_name||""}</td>
-        <td>${r.day||""}</td>
-        <td>${r.workshop||""}</td>
-        <td>${r.time_slot||""}</td>
-      `;
-      els.tableBody.appendChild(tr);
-    }
-    return data||[];
-  }
+            <div class="hint">
+              Tip: Approve admins in Supabase → Table Editor → <b>admins</b> table.
+            </div>
+          </div>
 
-  function exportExcel(rows){
-    if(!window.XLSX){
-      alert("Excel export library failed to load. Refresh and try again.");
-      return;
-    }
-    const ws = window.XLSX.utils.json_to_sheet(rows);
-    const wb = window.XLSX.utils.book_new();
-    window.XLSX.utils.book_append_sheet(wb, ws, "Registrations");
-    window.XLSX.writeFile(wb, "FMP_Workshop_Registrations.xlsx");
-  }
+        </div>
+      </div>
 
-  async function refreshAuth(){
-    if(!supabaseReady){
-      showAuth();
-      setMsg(els.authMsg, "error", "Supabase keys not set (config.js).");
-      return;
-    }
+      <div style="height:14px"></div>
+      <div class="small-link"><a href="./index.html">Back to registration</a></div>
+    </div>
+  </div>
 
-    const { data: { session } } = await client.auth.getSession();
-    if(!session){
-      showAuth();
-      hideExport();
-      return;
-    }
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';"></script>
+  
+  <!-- Supabase JS (UMD) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js';"></script>
+  <!-- XLSX for Excel export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';"></script>
 
-    const email = session.user.email;
-    els.me.textContent = email;
+  <script src="./config.js"></script>
+  <script src="./utils.js"></script>
+  <script src="./admin.js"></script>
 
-    const approved = await isApproved(email);
-    if(!approved){
-      showAuth();
-      hideExport();
-      setMsg(els.authMsg, "error", "Admin not approved yet. Set approved=true in admins table.");
-      return;
-    }
-
-    showDash();
-    showExport();
-    setMsg(els.dashMsg, "ok", "");
-    const rows = await loadTable();
-
-    els.exportBtn.onclick = () => exportExcel(rows);
-  }
-
-  els.registerBtn.addEventListener("click", async ()=>{
-    setMsg(els.authMsg, "ok", "");
-    const email = (els.email.value||"").trim().toLowerCase();
-    const pass = els.pass.value||"";
-    if(!email || !pass){ setMsg(els.authMsg,"error","Enter email + password."); return; }
-    const { error } = await client.auth.signUp({ email, password: pass });
-    if(error){ setMsg(els.authMsg,"error",error.message); return; }
-    setMsg(els.authMsg,"ok","Registered. Now login. If you are not approved, set approved=true in admins table.");
-  });
-
-  els.loginBtn.addEventListener("click", async ()=>{
-    setMsg(els.authMsg, "ok", "");
-    const email = (els.email.value||"").trim().toLowerCase();
-    const pass = els.pass.value||"";
-    if(!email || !pass){ setMsg(els.authMsg,"error","Enter email + password."); return; }
-    const { error } = await client.auth.signInWithPassword({ email, password: pass });
-    if(error){ setMsg(els.authMsg,"error",error.message); return; }
-    await refreshAuth();
-  });
-
-  els.logoutBtn.addEventListener("click", async ()=>{
-    await client.auth.signOut();
-    hideExport();
-    showAuth();
-  });
-
-  refreshAuth().catch(e=>setMsg(els.authMsg,"error",e.message));
-})();
+</body>
+</html>
