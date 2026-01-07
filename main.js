@@ -152,52 +152,72 @@
     return Math.max(0, C.SESSION_CAPACITY - (count || 0));
   }
 
+
+  // Fetch sessions for a day (workshop + time) and compute availability
+  async function getSessionsForDay(day){
+    const { data, error } = await client
+      .from("sessions")
+      .select("id, day, workshop, time_slot, capacity")
+      .eq("day", day)
+      .order("time_slot", { ascending: true });
+    if(error) throw error;
+    return data || [];
+  }
+
+  async function spotsLeftForSession(session){
+    const cap = Number(session.capacity ?? 20);
+    const { count, error } = await client
+      .from("registrations")
+      .select("*", { count: "exact", head: true })
+      .eq("session_id", session.id);
+    if(error) throw error;
+    const left = cap - (count || 0);
+    return left < 0 ? 0 : left;
+  }
+
   async function refreshTimes(){
-    setMsg(els.formMsg, "ok", "");
-    sessionMap = new Map();
-    currentLeft = 0;
-    setSubmitEnabled(false);
-
+    // In this version, "Workshop" dropdown shows workshop + time for the selected day.
     const day = els.day.value;
-    const workshop = els.workshop.value;
-
-    if(!day || !workshop){
-      basicTimes("Pick a day + workshop first");
-      showTimeHint("Pick a day + workshop first.");
-      updateAvailabilityUI();
+    if(!day){
+      fillSelect(els.workshop, [], "Select workshop / اختر الورشة");
+      els.time_slot.value = "";
+      currentSessionId = null;
+      updateSubmitState();
       return;
     }
 
-    showTimeHint(""); // hide
+    try{
+      setMsg(els.formMsg, "ok", "");
+      lockWorkshop(true);
+      const sessions = await getSessionsForDay(day);
 
-    // If Supabase not ready, still show times (no counts)
-    if(!supabaseReady){
-      basicTimes("Select time / اختر الوقت");
-      updateAvailabilityUI();
-      return;
-    }
+      const opts = [];
+      sessionMap.clear();
 
-    const opts = [];
-    for(const t of C.TIME_SLOTS){
-      const s = await getSession(day, workshop, t.value);
-      if(!s){
-        opts.push({ value: t.value, text: `${t.value} (setup required)`, disabled: false });
-        continue;
+      for(const s of sessions){
+        const left = await spotsLeftForSession(s);
+        sessionMap.set(String(s.id), { session: s, left });
+        const label = left <= 0
+          ? `${s.workshop} — ${s.time_slot} (FULL)`
+          : `${s.workshop} — ${s.time_slot} (${left} left)`;
+        opts.push({ value: String(s.id), text: label, disabled: left <= 0 });
       }
-      sessionMap.set(t.value, s);
-      const left = await spotsLeft(s.id);
-      const txt = left <= 0 ? `${t.value} (FULL)` : `${t.value} (${left} left)`;
-      opts.push({ value: t.value, text: txt, disabled: left <= 0 });
+
+      fillSelect(els.workshop, opts, "Select workshop / اختر الورشة");
+      els.workshop.value = "";
+      els.time_slot.value = "";
+      currentSessionId = null;
+      setMsg(els.availMsg, "ok", "");
+      updateSubmitState();
+    }catch(e){
+      setMsg(els.formMsg, "error", e.message || "Failed to load sessions.");
+      fillSelect(els.workshop, [], "Select workshop / اختر الورشة");
+      els.time_slot.value = "";
+      currentSessionId = null;
+      updateSubmitState();
+    }finally{
+      lockWorkshop(false);
     }
-
-    fillSelect(els.time_slot, opts, "Select time / اختر الوقت");
-    els.time_slot.disabled = false;
-
-    if(opts.some(o => String(o.text||"").includes("(setup required)"))){
-      setMsg(els.formMsg, "error", "Sessions are not seeded in Supabase. Run supabase.sql once to create all Day/Workshop/Time rows.");
-    }
-
-    updateAvailabilityUI();
   }
 
   async function onTimeChange(){
