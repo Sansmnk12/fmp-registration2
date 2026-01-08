@@ -155,11 +155,13 @@
 
   // Fetch sessions for a day (workshop + time) and compute availability
   async function getSessionsForDay(day){
+    // sessions has: id, workshop_id, day, start_time, end_time, capacity
+    // join workshops table to get the workshop name
     const { data, error } = await client
       .from("sessions")
-      .select("id, day, workshop, time_slot, capacity")
+      .select("id, day, start_time, end_time, capacity, workshop:workshops(name)")
       .eq("day", day)
-      .order("time_slot", { ascending: true });
+      .order("start_time", { ascending: true });
     if(error) throw error;
     return data || [];
   }
@@ -198,8 +200,8 @@
         const left = await spotsLeftForSession(s);
         sessionMap.set(String(s.id), { session: s, left });
         const label = left <= 0
-          ? `${s.workshop} — ${s.time_slot} (FULL)`
-          : `${s.workshop} — ${s.time_slot} (${left} left)`;
+          ? `${(s.workshop && s.workshop.name) ? s.workshop.name : 'Workshop'} — ${s.start_time} – ${s.end_time} (FULL)`
+          : `${(s.workshop && s.workshop.name) ? s.workshop.name : 'Workshop'} — ${s.start_time} – ${s.end_time} (${left} left)`;
         opts.push({ value: String(s.id), text: label, disabled: left <= 0 });
       }
 
@@ -324,3 +326,9 @@
   showTimeHint("Pick a day + workshop first.");
   setSubmitEnabled(false);
 })();
+
+
+function lockWorkshop(isLocked){
+  if(!window.els || !els.workshop) return;
+  els.workshop.disabled = !!isLocked;
+}
