@@ -2,126 +2,80 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FMP — Workshop Registration</title>
-  <link rel="stylesheet" href="./styles.css" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FMP Workshops Registration</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="wrap">
-    <div class="shell">
-      <div class="hero">
-        <div class="kicker">FMP — FUTURE MINERALS PIONEERS</div>
-        <h1>Workshop Competitor Registration</h1>
-        <p class="sub">Pick a workshop, then pick a time. You’ll see the spots left before you submit.</p>
-      </div>
+  <main class="wrap">
+    <header class="header">
+      <img class="logo" src="logo.png" alt="Logo" />
+      <h1>Workshop Registration</h1>
+      <p class="sub">Select the day, then choose the session (workshop + time). Capacity: 20 per session.</p>
+    </header>
 
-      <div class="card">
-        <div class="logo">
-          <img src="./assets/logo.png" alt="Logo" />
+    <section class="card">
+      <form id="regForm" class="form">
+        <div class="row">
+          <label>Full name / الاسم الكامل</label>
+          <input id="full_name" required placeholder="Your name" />
         </div>
-        <div class="card-inner">
 
-          <form id="regForm">
-            <div class="grid">
-              <div class="field">
-                <label>Full Name * <span class="ar">الاسم الكامل</span></label>
-                <input class="input" id="full_name" required placeholder="Your full name" />
-              </div>
-
-              <div class="grid two">
-                <div class="field">
-                  <label>Email * <span class="ar">البريد الإلكتروني</span></label>
-                  <input class="input" id="email" type="email" required placeholder="name@email.com" />
-                </div>
-                <div class="field">
-                  <label>Phone (with country code) * <span class="ar">رقم الجوال</span></label>
-                  <input class="input" id="phone" required placeholder="+966..." />
-                  <div class="hint">Example: +9665XXXXXXXX</div>
-                </div>
-              </div>
-
-              <div class="grid two">
-                <div class="field">
-                  <label>Team Name * <span class="ar">اسم الفريق</span></label>
-                  <input class="input" id="team_name" required placeholder="Team name" />
-                </div>
-                <div class="field">
-                  <label>Track Name * <span class="ar">المسار</span></label>
-                  <select id="track_name" required>
-                    <option value="" selected disabled>Select track / اختر المسار</option>
-                    <option value="Resource Sustainability">Resource Sustainability — استدامة الموارد</option>
-                    <option value="Smart Technology">Smart Technology — التقنية الذكية</option>
-                    <option value="Safety & Security">Safety & Security — السلامة والأمن</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="grid two">
-                <div class="field">
-                  <label>Day * <span class="ar">اليوم</span></label>
-                  <select id="day" required>
-                    <option value="" selected disabled>Select day / اختر اليوم</option>
-                    <option value="Day 1">Day 1 — اليوم 1</option>
-                    <option value="Day 2">Day 2 — اليوم 2</option>
-</select>
-                </div>
-                <div class="field">
-                  <label>Workshop * <span class="ar">الورشة</span></label>
-                  <select id="workshop" required>
-                    <option value="" selected disabled>Select workshop / اختر الورشة</option>
-                    <option value="Workshop 1">Workshop 1 — ورشة 1</option>
-                    <option value="Workshop 2">Workshop 2 — ورشة 2</option>
-                    <option value="Workshop 3">Workshop 3 — ورشة 3</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="field">
-                <label>Time Slot * <span class="ar">الوقت</span></label>
-                <select id="time_slot" required>
-                  <option value="" selected disabled>Pick a day + workshop first</option>
-                </select>
-                <div class="hint" id="timeHint">Pick a day + workshop first.</div>
-              </div>
-
-              <div class="avail" id="availabilityBox" style="display:none;">
-                <div>
-                  <h3>Availability</h3>
-                  <p class="big" id="spotsLeft">—</p>
-                  <p class="small" id="availMsg">Pick a time slot to check availability.</p>
-                </div>
-                <div class="badge" id="availBadge">—</div>
-              </div>
-
-              <div class="hint" id="submittedAs"></div>
-              <div id="formMsg" style="display:none;"></div>
-            </div>
-
-            <div class="sep"></div>
-
-            <div class="footer">
-              <button class="btn" id="submitBtn" type="submit" disabled>Submit Registration</button>
-              <div class="row">
-                <span class="note">Admin? Go to <a href="./admin.html">admin</a></span>
-                <span class="note">Capacity: 20 per session</span>
-              </div>
-            </div>
-          </form>
-
+        <div class="row two">
+          <div>
+            <label>Email / البريد</label>
+            <input id="email" type="email" required placeholder="name@email.com" />
+          </div>
+          <div>
+            <label>Phone / الجوال</label>
+            <input id="phone" required placeholder="+966..." />
+          </div>
         </div>
-      </div>
 
-      <div style="height:14px"></div>
-      <div class="small-link">Hosted on GitHub Pages • Powered by Supabase</div>
-    </div>
-  </div>
+        <div class="row">
+          <label>Team / الجهة</label>
+          <input id="team_name" required placeholder="Company / University..." />
+        </div>
 
-  
-  <!-- Supabase JS (UMD) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js';"></script>
-  <script src="./config.js"></script>
-  <script src="./utils.js"></script>
-  <script src="./main.js"></script>
+        <div class="row">
+          <label>Track / المسار</label>
+          <select id="track_name" required>
+            <option value="">Select track / اختر المسار</option>
+            <option>Resource Sustainability</option>
+            <option>Smart Technology</option>
+            <option>Safety & Security</option>
+          </select>
+        </div>
 
+        <div class="row">
+          <label>Day / اليوم</label>
+          <select id="day" required>
+            <option value="">Select day / اختر اليوم</option>
+            <option value="Day 1">Day 1</option>
+            <option value="Day 2">Day 2</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label>Workshop (with time) / الورشة (مع الوقت)</label>
+          <select id="session" required disabled>
+            <option value="">Select day first / اختر اليوم أولاً</option>
+          </select>
+          <div id="spots" class="hint"></div>
+        </div>
+
+        <button id="submitBtn" class="btn" type="submit" disabled>Submit / تسجيل</button>
+        <div id="msg" class="msg"></div>
+      </form>
+    </section>
+
+    <footer class="footer">
+      <a href="admin.html">Admin login</a>
+    </footer>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

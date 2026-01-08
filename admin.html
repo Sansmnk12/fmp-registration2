@@ -2,74 +2,84 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin — Workshop Registrations</title>
-  <link rel="stylesheet" href="./styles.css" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin • FMP Registration</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
-<body class="bg">
-  <main class="container">
-    <div class="card">
-      <div class="logoWrap">
-        <img src="./assets/logo.png" alt="Logo" class="logo" />
+<body>
+  <main class="wrap">
+    <header class="header">
+      <h1>Admin</h1>
+      <p class="sub">Login, view registrations, export to Excel (CSV).</p>
+    </header>
+
+    <section class="card">
+      <div class="tabs">
+        <button class="tab active" data-tab="login">Login</button>
+        <button class="tab" data-tab="signup">Register</button>
+        <button class="tab" data-tab="dash">Dashboard</button>
       </div>
 
-      <h1 class="title">Admin Dashboard</h1>
-      <p class="subtitle">Login to view registrations and export Excel.</p>
-
-      <p id="bootMsg" class="msg" style="display:none;"></p>
-
-      <section id="authBox">
-        <div class="grid">
-          <label class="label">Email</label>
-          <input id="adminEmail" class="input" type="email" placeholder="name@email.com" autocomplete="email" />
-          <label class="label">Password</label>
-          <input id="adminPassword" class="input" type="password" placeholder="••••••••" autocomplete="current-password" />
+      <div id="login" class="panel show">
+        <div class="row">
+          <label>Email</label>
+          <input id="login_email" type="email" placeholder="admin@email.com" />
         </div>
-
-        <div class="row" style="margin-top: 14px;">
-          <button id="signupBtn" class="btn secondary" type="button">Register</button>
-          <button id="loginBtn" class="btn" type="button">Login</button>
+        <div class="row">
+          <label>Password</label>
+          <input id="login_password" type="password" placeholder="••••••••" />
         </div>
+        <button id="loginBtn" class="btn" type="button">Login</button>
+        <div id="loginMsg" class="msg"></div>
+      </div>
 
-        <p id="authMsg" class="msg" style="display:none;"></p>
-      </section>
-
-      <section id="dataBox" style="display:none;">
-        <div class="row" style="justify-content: space-between; margin-top: 10px;">
-          <div class="chip">Logged in as: <span id="me">—</span></div>
-          <div class="row">
-            <button id="exportBtn" class="btn secondary" type="button" style="display:none;">Export Excel</button>
-            <button id="logoutBtn" class="btn ghost" type="button">Logout</button>
-          </div>
+      <div id="signup" class="panel">
+        <div class="row">
+          <label>Email</label>
+          <input id="signup_email" type="email" placeholder="admin@email.com" />
         </div>
+        <div class="row">
+          <label>Password</label>
+          <input id="signup_password" type="password" placeholder="Min 6 chars" />
+        </div>
+        <button id="signupBtn" class="btn" type="button">Register</button>
+        <p class="hint">After registering, you must be approved in the admins table.</p>
+        <div id="signupMsg" class="msg"></div>
+      </div>
 
-        <p id="dashMsg" class="msg" style="display:none;"></p>
-
-        <div class="tableWrap" style="margin-top: 12px;">
-          <table class="table">
+      <div id="dash" class="panel">
+        <div class="row two">
+          <button id="refreshBtn" class="btn secondary" type="button">Refresh</button>
+          <button id="exportBtn" class="btn" type="button">Export CSV</button>
+        </div>
+        <div class="row two">
+          <button id="logoutBtn" class="btn ghost" type="button">Logout</button>
+          <div id="dashMsg" class="msg"></div>
+        </div>
+        <div class="tableWrap">
+          <table id="table">
             <thead>
               <tr>
-                <th>Created</th>
-                <th>Full name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Team</th>
-                <th>Track</th>
                 <th>Day</th>
                 <th>Workshop</th>
                 <th>Time</th>
+                <th>Track</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Team</th>
+                <th>Created</th>
               </tr>
             </thead>
-            <tbody id="regTableBody"></tbody>
+            <tbody></tbody>
           </table>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
   </main>
 
-  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="./config.js"></script>
-  <script defer src="./admin.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="admin.js"></script>
 </body>
 </html>
