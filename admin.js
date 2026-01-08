@@ -28,6 +28,21 @@ const els = {
   tbody: document.querySelector('#table tbody')
 };
 
+function setDashboardAccess(enabled){
+  const dashTab = document.querySelector('[data-tab="dash"]');
+  if (dashTab) dashTab.style.display = enabled ? '' : 'none';
+
+  // Buttons must only appear after successful admin login
+  if (els.exportBtn) els.exportBtn.style.display = enabled ? '' : 'none';
+  if (els.refreshBtn) els.refreshBtn.style.display = enabled ? '' : 'none';
+  if (els.logoutBtn) els.logoutBtn.style.display = enabled ? '' : 'none';
+
+  if (!enabled){
+    // Keep user on login screen
+    showTab('login');
+  }
+}
+
 function setMsg(el, type, text){
   el.className = 'msg ' + (type === 'ok' ? 'ok' : 'err');
   el.textContent = text || '';
@@ -109,6 +124,17 @@ els.loginBtn.addEventListener('click', async () => {
   const password = els.login_password.value;
   const { error } = await client.auth.signInWithPassword({ email, password });
   if(error){ setMsg(els.loginMsg,'err', error.message); return; }
+  // Only approved admins can access the dashboard
+  const { data: { user } } = await client.auth.getUser();
+  const ok = await isApproved(user?.email);
+  if(!ok){
+    await client.auth.signOut();
+    setMsg(els.loginMsg,'err','Your admin access is not approved yet.');
+    setDashboardAccess(false);
+    showTab('login');
+    return;
+  }
+  setDashboardAccess(true);
   showTab('dash');
   await loadTable();
 });
@@ -129,7 +155,24 @@ els.refreshBtn.addEventListener('click', loadTable);
 els.exportBtn.addEventListener('click', exportCSV);
 els.logoutBtn.addEventListener('click', async () => {
   await client.auth.signOut();
+  setDashboardAccess(false);
   showTab('login');
 });
 
-showTab('login');
+// Boot
+setDashboardAccess(false);
+(async () => {
+  try{
+    const { data: { session } } = await client.auth.getSession();
+    if(session?.user?.email){
+      const ok = await isApproved(session.user.email);
+      if(ok){
+        setDashboardAccess(true);
+        showTab('dash');
+        await loadTable();
+        return;
+      }
+    }
+  }catch(e){ /* ignore */ }
+  showTab('login');
+})();
