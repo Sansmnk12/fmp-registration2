@@ -162,3 +162,7 @@ a:hover{ text-decoration:underline; }
   border-radius:999px;
   background: rgba(10,20,30,.03);
 }
+
+
+/* Hide Time Slot dropdown (session selection includes time) */
+.hide-time-slot{display:none !important;}

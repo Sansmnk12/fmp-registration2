@@ -25,6 +25,33 @@
     regForm: qs("#regForm"),
   };
 
+/* v16: Sessions are selected via Workshop dropdown (workshop + time together). */
+function formatTimeRange(start, end){
+  return `${start}–${end}`;
+}
+function getTimeSlotWrapper(){
+  try{
+    const el = document.getElementById('time_slot') || (typeof els !== 'undefined' ? els.time_slot : null);
+    if(!el) return null;
+    return el.closest('.field') || el.closest('.form-row') || el.parentElement;
+  }catch(e){ return null; }
+}
+function hideTimeSlotUI(){
+  const w = getTimeSlotWrapper();
+  if(w) w.classList.add('hide-time-slot');
+}
+
+
+
+
+// UI helper: disable/enable workshop + time fields safely
+function lockWorkshop(locked=true){
+  try{
+    if(els.workshop) els.workshop.disabled = locked;
+    if(els.time_slot) els.time_slot.disabled = locked;
+  }catch(e){}
+}
+
   function setSubmitEnabled(enabled){
     els.submitBtn.disabled = !enabled;
     els.submitBtn.classList.toggle("disabled", !enabled);
@@ -249,7 +276,110 @@
     els.track_name.addEventListener(evt, revalidate);
   });
 
-  els.day.addEventListener("change", () => refreshTimes().catch(e=>setMsg(els.formMsg,"error",e.message)));
+  async function loadSessionsForDay(day){
+  if(!day) return [];
+  const { data: sessions, error: sErr } = await supabase
+    .from('sessions')
+    .select('id, day, start_time, end_time, capacity, workshop_id')
+    .eq('day', day)
+    .order('start_time', { ascending: true });
+  if(sErr) throw sErr;
+
+  const workshopIds = [...new Set((sessions||[]).map(s => s.workshop_id).filter(Boolean))];
+  let workshopsById = {};
+  if(workshopIds.length){
+    const { data: ws, error: wErr } = await supabase
+      .from('workshops')
+      .select('id, name')
+      .in('id', workshopIds);
+    if(wErr) throw wErr;
+    workshopsById = Object.fromEntries((ws||[]).map(w => [w.id, w.name]));
+  }
+
+  const sessionIds = (sessions||[]).map(s => s.id);
+  let counts = {};
+  if(sessionIds.length){
+    const { data: regs, error: rErr } = await supabase
+      .from('registrations')
+      .select('session_id')
+      .in('session_id', sessionIds);
+    if(rErr) throw rErr;
+    for(const r of (regs||[])){
+      counts[r.session_id] = (counts[r.session_id] || 0) + 1;
+    }
+  }
+
+  return (sessions||[]).map(s => {
+    const used = counts[s.id] || 0;
+    const left = Math.max(0, (s.capacity ?? 20) - used);
+    return {
+      ...s,
+      workshop_name: workshopsById[s.workshop_id] || 'Workshop',
+      used,
+      left,
+      full: left <= 0
+    };
+  });
+}
+
+function populateWorkshopAsSessions(sessions){
+  const sel = els.workshop;
+  if(!sel) return;
+  sel.innerHTML = '';
+  const opt0 = document.createElement('option');
+  opt0.value = '';
+  opt0.textContent = 'Select session / اختر الجلسة';
+  sel.appendChild(opt0);
+
+  for(const s of sessions){
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    const time = formatTimeRange(s.start_time, s.end_time);
+    const status = s.full ? 'FULL' : `${s.left} left`;
+    opt.textContent = `${s.workshop_name} — ${time} (${status})`;
+    if(s.full) opt.disabled = true;
+    sel.appendChild(opt);
+  }
+
+  sel.disabled = false;
+}
+
+async function onDayChanged(){
+  const day = els.day?.value || '';
+
+  // reset session selector
+  if(els.workshop){
+    els.workshop.innerHTML = '<option value="">Loading…</option>';
+    els.workshop.disabled = true;
+  }
+
+  // hide/disable time_slot (selected via session)
+  if(els.time_slot){
+    els.time_slot.innerHTML = '<option value="">Selected via session</option>';
+    els.time_slot.disabled = true;
+  }
+
+  if(!day){
+    if(els.workshop){
+      els.workshop.innerHTML = '<option value="">Select session / اختر الجلسة</option>';
+      els.workshop.disabled = true;
+    }
+    return;
+  }
+
+  try{
+    const sessions = await loadSessionsForDay(day);
+    populateWorkshopAsSessions(sessions);
+  }catch(e){
+    showError(e?.message || String(e));
+    if(els.workshop){
+      els.workshop.innerHTML = '<option value="">Could not load sessions</option>';
+      els.workshop.disabled = true;
+    }
+  }
+}
+
+els.day.addEventListener("change", () => refreshTimes().catch(e=>setMsg(els.formMsg,"error",e.message)));
   els.workshop.addEventListener("change", () => refreshTimes().catch(e=>setMsg(els.formMsg,"error",e.message)));
   els.time_slot.addEventListener("change", () => onTimeChange().catch(e=>setMsg(els.formMsg,"error",e.message)));
 
@@ -326,9 +456,3 @@
   showTimeHint("Pick a day + workshop first.");
   setSubmitEnabled(false);
 })();
-
-
-function lockWorkshop(isLocked){
-  if(!window.els || !els.workshop) return;
-  els.workshop.disabled = !!isLocked;
-}
